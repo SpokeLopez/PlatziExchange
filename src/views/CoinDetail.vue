@@ -1,6 +1,9 @@
 <template>
     <div class="flex-col">
-        <template v-if="asset.id">
+        <div class="flex justify-center">
+            <bounce-loader :loading="isLoading" :color= "'#68D391'" :size="100"/>
+        </div>
+        <template v-if="!isLoading">
             <div class="flex flex-col sm:flex-row justify-around items-center">
                 <div class="flex flex-col items-center">
                     <img :src="
@@ -40,7 +43,6 @@
                         </li>
                     </ul>
                 </div>
-
                 <div class="my-10 sm:mt-0 flex flex-col justify-center text-center">
                     <button
                         class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Cambiar</button>
@@ -55,6 +57,11 @@
                     <span class="text-xl"></span>
                 </div>
             </div>
+            <line-chart class="my-10" 
+            :colors="['orange']"
+            :min="min"
+            :max="max"
+            :data="history.map(h => [h.date, parseFloat(h.priceUsd).toFixed(2)])" />
         </template>
     </div>
 </template>
@@ -68,6 +75,7 @@ export default {
     data() {
         return {
             asset: {},
+            isLoading: false,
             history: []
         }
     },
@@ -91,19 +99,20 @@ export default {
     },
 
     created() {
-        this.getCoin()    
+        this.getCoin()
     },
 
     methods: {
         getCoin() {
             const id = this.$route.params.id
+            this.isLoading = true
 
             Promise.all([api.getAsset(id), api.getAssetHistory(id)]).then(
                 ([asset, history]) => {
                     this.asset = asset
                     this.history = history
-                }
-            )
+                })
+                .finally(() => this.isLoading = false)
         },
     }
 }
